@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Makes the OpenTelemetry PoC export to the local Jaeger container (see docker-compose.yml) when tests run
+  through VS Test Explorer or `dotnet test`, which otherwise would not see a terminal-only env var.
+-->
+<RunSettings>
+  <RunConfiguration>
+    <EnvironmentVariables>
+      <OTEL_EXPORTER_OTLP_ENDPOINT>http://localhost:4317</OTEL_EXPORTER_OTLP_ENDPOINT>
+    </EnvironmentVariables>
+  </RunConfiguration>
+</RunSettings>

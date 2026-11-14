@@ -6,6 +6,7 @@
   </Configurations>
   <Project Path="TestInfra.Baseline/TestInfra.Baseline.csproj" />
   <Project Path="TestInfra.Generated/TestInfra.Generated.csproj" />
+  <Project Path="TestInfra.Otel/TestInfra.Otel.csproj" />
   <Project Path="TestInfra.Pom.V1/TestInfra.Pom.V1.csproj" />
   <Project Path="TestInfra.Pom.V2/TestInfra.Pom.V2.csproj" />
   <Project Path="TestInfra.Pom.V3/TestInfra.Pom.V3.csproj" />

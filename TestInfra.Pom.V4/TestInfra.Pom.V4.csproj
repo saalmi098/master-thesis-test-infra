@@ -16,6 +16,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+	<ProjectReference Include="..\TestInfra.Otel\TestInfra.Otel.csproj" />
     <ProjectReference Include="..\TestInfra.Shared\TestInfra.Shared.csproj" />
   </ItemGroup>
 </Project>

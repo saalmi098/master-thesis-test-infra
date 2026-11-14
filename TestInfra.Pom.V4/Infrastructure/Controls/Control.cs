@@ -16,6 +16,7 @@ public abstract class Control(IPage page, ILocator? baseLocator = null) : IBinda
 {
     private readonly ComponentBindingContext _bindingContext = new(page, baseLocator);
     private ILocator? _root;
+    private ControlTracing Tracing => field ??= new(page, GetType().Name, () => Locator, GetLabel);
 
     /// <summary>
     /// The Playwright browser page used to interact with the application.
@@ -62,4 +63,31 @@ public abstract class Control(IPage page, ILocator? baseLocator = null) : IBinda
     /// Writes a trace line for an interaction with this control.
     /// </summary>
     protected void Trace(string message) => E2ETrace.Write(GetType(), message);
+
+    /// <summary>
+    /// Runs a user interaction (click, selection, typing, ...) inside an OpenTelemetry span, so the interaction
+    /// is reported the same way a real frontend RUM integration would report it. See <see cref="ControlTracing"/>.
+    /// </summary>
+    /// <param name="interactionName">The interaction being performed, e.g. "Click", "SelectOption".</param>
+    /// <param name="operation">The Playwright interaction to execute inside the span.</param>
+    /// <param name="target">
+    /// A human-readable identifier for what was interacted with (button label, tab text, option selected, ...).
+    /// Defaults to <see cref="GetLabel"/> when not given explicitly.
+    /// </param>
+    /// <param name="attributes">Additional span attributes, e.g. the option text selected.</param>
+    protected Task TraceInteraction(
+        string interactionName,
+        Func<Task> operation,
+        string? target = null,
+        IReadOnlyDictionary<string, object?>? attributes = null)
+        => Tracing.TraceInteraction(interactionName, operation, target, attributes);
+
+    /// <summary>
+    /// This control's own human-readable name, e.g. a button's caption or a tab's text. Used by
+    /// <see cref="TraceInteraction"/> as the default span target when a call site doesn't pass one explicitly.
+    /// Override for controls whose own visible text identifies them. Default is none: not every control has
+    /// an obvious one (e.g. an input field's identifier is better expressed as the value passed to
+    /// <see cref="TraceInteraction"/>).
+    /// </summary>
+    protected virtual Task<string?> GetLabel() => Task.FromResult<string?>(null);
 }

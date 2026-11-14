@@ -33,7 +33,7 @@ internal sealed class ComponentTreeBuilder(IPage page)
 
         try
         {
-            var instance = ComponentActivator.Create(componentType, _page, baseLocator);
+            var instance = ComponentActivator.Create(componentType, _page, baseLocator); // TODO: could be moved out of here into PageObjectFactory to fulfill the single responsibility principle
             await BindProperties(instance, baseLocator, waitForRequiredLocators);
             return instance;
         }

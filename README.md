@@ -37,6 +37,7 @@ The solution has independent xUnit v3 projects using `Microsoft.Playwright.Xunit
 - **TestInfra.Pom.V2** - independent attribute-bound page objects, reflective factory, locator binder, and tab scenarios. See [`TestInfra.Pom.V2/docs`](TestInfra.Pom.V2/docs).
 - **TestInfra.Pom.V3** - independent compile-time page objects: static-abstract-interface-based generic creation, `Required<T>`/`Optional<T>` typed locators, no reflection. See [`TestInfra.Pom.V3/docs/architecture.md`](TestInfra.Pom.V3/docs/architecture.md).
 - **TestInfra.Pom.V4** - V2 plus typed control wrappers (`Button`, `TextField`, `Select`, ...) that encapsulate MudBlazor interaction behaviour; see the [test-creation guide](TestInfra.Pom.V4/docs/test-creation-guide.md); work in progress.
+- **TestInfra.Otel** — OpenTelemetry PoC: traces V4 user interactions and page-object binds as spans, exported to the console and/or an OTLP collector (e.g. the Jaeger container in `docker-compose.yml`; see `TestInfra.Pom.V4/otel.runsettings`).
 - **TestInfra.Screenplay** - actors, abilities, tasks, questions, and matching scenarios.
 - **TestInfra.Generated** - reserved for LLM-generated Playwright tests; currently contains no tests.
 

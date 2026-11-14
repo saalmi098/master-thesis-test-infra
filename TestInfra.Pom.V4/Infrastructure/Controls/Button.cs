@@ -7,11 +7,12 @@ namespace TestInfra.Pom.V4.Infrastructure.Controls;
 /// </summary>
 public sealed class Button(IPage page, ILocator? baseLocator = null) : Control(page, baseLocator)
 {
-    public async Task Click()
+    public Task Click() => TraceInteraction("Click", async () =>
     {
         Trace("Clicking button.");
         await Locator.ClickAsync();
-    }
+    });
 
-    public Task<string> GetText() => Locator.InnerTextAsync();
+    protected override async Task<string?> GetLabel()
+        => (await Locator.InnerTextAsync()).Trim();
 }
