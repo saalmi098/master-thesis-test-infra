@@ -1,0 +1,13 @@
+using TestInfra.Screenplay.Abilities;
+
+namespace TestInfra.Screenplay.Tasks;
+
+public sealed record SignOut : ITask
+{
+    public async Task PerformAsAsync(Actor actor)
+    {
+        var page = actor.Ability<BrowseTheWeb>().Page;
+        await page.GetByTestId("nav-logout-desktop").ClickAsync();
+        await page.GetByTestId("nav-login-desktop").WaitForAsync();
+    }
+}

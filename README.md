@@ -1,41 +1,47 @@
-# ShopDemo
+# TestInfra
 
-A small, client-only webshop proof of concept built with the .NET SDK 10.0.303, Blazor WebAssembly, and MudBlazor 8.14.0. It demonstrates a lightweight separation of domain rules, application use cases, infrastructure, and UI without adding a server, database, ORM, or payment provider.
+Playwright (.NET) end-to-end test projects that compare different ways of structuring E2E tests (Baseline, Page Objects V1-V4, Screenplay). All suites test the same webshop, **ShopDemo**, and implement the same user journeys, so the trade-offs of each structure become visible. The webshop itself lives in the separate repository `master-thesis-demo-app`; this repository contains only the test infrastructure.
 
-## Run it
+See [`docs/e2e-test-structure-poc.md`](docs/e2e-test-structure-poc.md) for the comparison and [`docs/slidev_presentation_E2E_Testing_Structure_with_Page_Object_Models.md`](docs/slidev_presentation_E2E_Testing_Structure_with_Page_Object_Models.md) for the presentation.
 
-Install a supported .NET 10 SDK, then from the repository root:
+## Prerequisites
 
-```powershell
-dotnet restore ShopDemo.sln --source https://api.nuget.org/v3/index.json
-dotnet run --project ShopDemo.Client --no-restore
-```
+- .NET SDK 10
+- A running ShopDemo instance. Start it from the `master-thesis-demo-app` repository (`dotnet run --project ShopDemo.Server`, or `docker compose up --build`).
+- Playwright browsers: build the solution once, then run `pwsh TestInfra.Baseline/bin/Debug/net10.0/playwright.ps1 install chromium`.
 
-Open the local URL printed by the development server. To run the unit tests:
-
-```powershell
-dotnet test ShopDemo.Tests --no-restore
-```
-
-## Playwright E2E suites
-
-The solution has six independent xUnit v3 projects using `Microsoft.Playwright.Xunit.v3` 1.63.0 and xUnit v3 3.2.2: **ShopDemo.Tests.E2E.Baseline** uses Playwright directly, **ShopDemo.Tests.E2E.Pom.V1** uses Page Objects, **ShopDemo.Tests.E2E.Pom.V2** is an attribute-bound Page Object PoC, **ShopDemo.Tests.E2E.Pom.V3** is a compile-time (reflection-free) Page Object PoC, **ShopDemo.Tests.E2E.Pom.V4** extends V2 with typed MudBlazor control wrappers (work in progress), and **ShopDemo.Tests.E2E.Screenplay** uses Screenplay. V4 bound properties use `required init` rather than null-forgiving initializers. Locators are required by default; `[Locator(..., Optional = true)]` skips the initial visibility wait and owning page's readiness requirement without making the bound locator or control property nullable. See the [V4 test-creation guide](ShopDemo.Tests.E2E.Pom.V4/docs/test-creation-guide.md) for examples. The original three suites implement the same four journeys; V2 and V3 cover those journeys plus a product-details tab journey. **ShopDemo.Tests.E2E.Shared** contains only the shared Playwright `PageTest` setup, base URL, and demo test data. UI controls used by E2E have stable `data-testid` values.
-
-The Baseline suite keeps navigation, selectors, and interactions directly in each test to provide a comparison for code length and duplication. The POM V1 suite uses `PomPageTestBase`, which inherits `ShopDemoPageTest` to reuse its browser context options and provides a lazy `Pages` property. The page-object graph is created on first access and belongs to that test's `PageTest.Page`; no page-bound objects are shared across tests.
-
-A separate V2 project deliberately does not reference V1. Its reflective factory injects `IPage` and an optional locator scope, while its binder resolves `[DataTestId]` and `[Locator]` attributes and waits for required locators before returning objects. It supports nested component scopes and defers tab-object creation until the parent clicks the tab. The Product Details page uses regular MudBlazor Overview and Inventory tabs.
-
-A lazy `GetPage<T>()` alternative is documented in [`docs/pom-page-object-factory.md`](docs/pom-page-object-factory.md); it is a proposal, not the current POM implementation.
-
-A separate V3 project also does not reference V1 or V2. It covers the same five journeys as V2 with no reflection: a static-abstract interface member (`IPageComponent<T>`) lets `PageComponent.Create<T>` construct and wait for any page object at compile time, and required/optional UI is a property type (`Required<ILocator>`/`Optional<ILocator>`) assigned once in the constructor rather than an attribute resolved by a binder. See [`ShopDemo.Tests.E2E.Pom.V3/docs/architecture.md`](ShopDemo.Tests.E2E.Pom.V3/docs/architecture.md) for the approach and its strengths/drawbacks versus V2.
-
-Run all browser suites end-to-end from PowerShell. The script restores from public NuGet, builds the solution, installs Chromium, starts the client, waits for it to respond, runs all five suites, and stops the client:
+## Run the tests
 
 ```powershell
-pwsh .\scripts\test-e2e.ps1
+dotnet restore TestInfra.slnx --source https://api.nuget.org/v3/index.json
+dotnet build TestInfra.slnx --no-restore
+dotnet test TestInfra.Baseline
 ```
 
-To run a suite against an already-running app, set `SHOPDEMO_BASE_URL` (default `http://127.0.0.1:5178`) and run `dotnet test ShopDemo.Tests.E2E.Baseline`, `dotnet test ShopDemo.Tests.E2E.Pom.V1`, `dotnet test ShopDemo.Tests.E2E.Pom.V2`, `dotnet test ShopDemo.Tests.E2E.Pom.V3`, `dotnet test ShopDemo.Tests.E2E.Pom.V4`, or `dotnet test ShopDemo.Tests.E2E.Screenplay`. Each Playwright test uses a fresh browser context; the cross-role test switches users within one context so its session-only stock and orders remain available.
+Tests reach the app through `SHOPDEMO_BASE_URL` (default `https://localhost:53246/`, the app's launch-profile URL). For the docker compose stack use `http://localhost:5178`:
+
+```powershell
+$env:SHOPDEMO_BASE_URL = "http://localhost:5178"
+dotnet test TestInfra.Pom.V4
+```
+
+Each suite can be run on its own: `TestInfra.Baseline`, `TestInfra.Pom.V1`, `TestInfra.Pom.V2`, `TestInfra.Pom.V3`, `TestInfra.Pom.V4`, `TestInfra.Screenplay`. `TestInfra.Generated` is reserved for LLM-generated Playwright tests (none committed yet).
+
+## Projects
+
+The solution has independent xUnit v3 projects using `Microsoft.Playwright.Xunit.v3` 1.63.0 and xUnit v3 3.2.2:
+
+- **TestInfra.Shared** - common Playwright `PageTest` setup, base URL, demo data, and `TestDatabase.ResetAsync()`.
+- **TestInfra.Baseline** - direct Playwright tests without POM or Screenplay abstractions.
+- **TestInfra.Pom.V1** - hand-written page objects and POM scenarios.
+- **TestInfra.Pom.V2** - independent attribute-bound page objects, reflective factory, locator binder, and tab scenarios. See [`TestInfra.Pom.V2/docs`](TestInfra.Pom.V2/docs).
+- **TestInfra.Pom.V3** - independent compile-time page objects: static-abstract-interface-based generic creation, `Required<T>`/`Optional<T>` typed locators, no reflection. See [`TestInfra.Pom.V3/docs/architecture.md`](TestInfra.Pom.V3/docs/architecture.md).
+- **TestInfra.Pom.V4** - V2 plus typed control wrappers (`Button`, `TextField`, `Select`, ...) that encapsulate MudBlazor interaction behaviour; see the [test-creation guide](TestInfra.Pom.V4/docs/test-creation-guide.md); work in progress.
+- **TestInfra.Otel** — OpenTelemetry PoC: traces V4 user interactions and page-object binds as spans, exported to the console and/or an OTLP collector (e.g. the Jaeger container in `docker-compose.yml`; see `TestInfra.Pom.V4/otel.runsettings`).
+- **TestInfra.Screenplay** - actors, abilities, tasks, questions, and matching scenarios.
+- **TestInfra.Generated** - reserved for LLM-generated Playwright tests; currently contains no tests.
+
+The Baseline suite keeps navigation, selectors, and interactions directly in each test to provide a comparison for code length and duplication. The POM V1 suite uses `PomPageTestBase`, which inherits `ShopDemoPageTest` to reuse its browser context options and provides a lazy `Pages` property; the page-object graph belongs to that test's `PageTest.Page` and is never shared across tests. V2, V3, and V4 deliberately do not reference V1 (V4 extends the V2 design). A lazy `GetPage<T>()` alternative is documented in [`docs/pom-page-object-factory.md`](docs/pom-page-object-factory.md); it is a proposal, not the current POM implementation.
 
 ### Reuse in the test patterns
 
@@ -43,71 +49,10 @@ To run a suite against an already-running app, set `SHOPDEMO_BASE_URL` (default 
 - **Screenplay:** For example `SignIn`, `AddProductToCart`, and `CompleteCheckout` are composed in multiple scenarios. The same `OrderIsVisible` question checks their outcomes.
 - **Baseline:** The same login, cart, and checkout interactions are repeated inline, showing what the abstractions remove.
 
-## UI interaction tracing (OpenTelemetry PoC)
+## Test isolation
 
-A separate **ShopDemo.Tests.E2E.Otel** project adds OpenTelemetry instrumentation to the **Pom.V4** suite only (the other suites are untouched). It traces real user interactions — clicks, fills, selections, tab switches — and page-object binding as spans, exported to the console and, optionally, to an OTLP collector such as Jaeger.
+State lives in the app's database, so the suites call `POST /api/test/reset` before every test (`ShopDemoPageTest` / `ShopDemoPageTestV4`) and run without parallelization; the app must run with `Testing__EnableResetEndpoint=true` (the default). Set `SHOPDEMO_RESET_DB=false` to keep data between tests. Each Playwright test uses a fresh browser context. Lists are filled from the API after navigation; assert with retrying expectations (or `LocatorExtensions.IsEventuallyVisibleAsync`) instead of reading a count immediately after a click.
 
-### Try it out
+## Demo accounts used by the tests
 
-1. Start Jaeger (all-in-one, OTLP + UI) via `docker compose up -d` (see `docker-compose.yml`). UI at <http://localhost:16686>, OTLP gRPC receiver on `4317`.
-2. Run the app and the V4 suite as usual, pointing the exporter at Jaeger:
-
-   ```powershell
-   $env:OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4317"
-   dotnet test ShopDemo.Tests.E2E.Pom.V4
-   ```
-
-   In Visual Studio, select `ShopDemo.Tests.E2E.Pom.V4\otel.runsettings` under *Test > Configure Run Settings > Select Solution Wide runsettings File* instead — VS doesn't inherit a terminal-only environment variable, the runsettings file sets it for the test host directly, so right-click "Run Test"/Test Explorer work the same as the command line.
-3. Open <http://localhost:16686> and pick service `ShopDemo.E2E.Tests`.
-
-Without `OTEL_EXPORTER_OTLP_ENDPOINT` set, spans still print to the console — no Docker required to see the instrumentation working.
-
-### What gets traced
-
-- **One root span per test**, named after the test method and tagged `test.class` / `test.method` / `test.outcome`, so a trace backend can filter by either independently (e.g. Jaeger tag search `test.class=CatalogPageTests`).
-- **One span per control interaction**, e.g. `Button.Click: LOG IN`, `Tab.Select: INVENTORY`, `Select.SelectOption: 25`. The readable part after `:` comes from the control's own text/label or the value/option it was given — never the raw locator/selector, which is often dynamic and not meaningful to read.
-- **One span per page-object bind** (`CatalogPage.Bind`, `ProductDetailsInventoryTab.Bind`, ...) and the initial page navigation (`Page.Goto`). This is usually where the real time goes — MudBlazor render and data load — not inside the interactions themselves.
-- Pass/fail status and exceptions are recorded on the relevant span.
-
-All spans for one test nest under that test's root span as a single trace, rather than each interaction starting its own disconnected trace.
-
-### How it's wired in
-
-`PageTracing.TraceInteractionAsync(Page, componentType, interactionName, operation, target)` (in `ShopDemo.Tests.E2E.Otel`) is the single entry point. `Control.TraceInteraction`, `PageObjectFactory.Create<T>`, and `ShopDemoPageTestV4<T>.InitializeAsync` all call through it, so none of the V4 POM classes reference the OpenTelemetry SDK directly. A control gets a readable span name for free by overriding `Control.GetLabel()` (see `Button`, `Tab`); other controls pass an explicit `target` instead. The test's root span is looked up per interaction via a `ConditionalWeakTable<IPage, Activity>` (see `UserInteractionTelemetry`) rather than ambient `Activity.Current`, since xUnit v3's in-process runner does not reliably flow `ExecutionContext` from a test's `InitializeAsync` into the test method body.
-
-## Demo login
-
-- **Shopper**
-  - Email: `demo@test.com`
-  - Password: `1234`
-- **Store manager**
-  - Email: `admin@test.com`
-  - Password: `1234`
-
-The role and credentials for both accounts are defined in `ShopDemo.Client/wwwroot/data/demo-users.json`.
-
-## Architecture
-
-- **ShopDemo.Domain** — product, cart, checkout, and order models plus stock/quantity rules.
-- **ShopDemo.Application** — use-case interfaces, checkout/order-creation logic, and role-checked inventory management.
-- **ShopDemo.Infrastructure** — JSON-backed product and demo-user configuration, and in-memory cart/order state.
-- **ShopDemo.Client** — standalone Blazor WebAssembly UI, routing, dependency injection, and MudBlazor components.
-- **ShopDemo.Tests** — unit tests for cart rules and checkout behavior.
-- **ShopDemo.Tests.E2E.Shared** — common Playwright test setup and demo data.
-- **ShopDemo.Tests.E2E.Baseline** — direct Playwright tests without POM or Screenplay abstractions.
-- **ShopDemo.Tests.E2E.Pom.V1** — page objects and POM scenarios.
-- **ShopDemo.Tests.E2E.Pom.V2** — independent attribute-bound page objects, reflective factory, locator binder, and tab scenarios.
-- **ShopDemo.Tests.E2E.Pom.V3** — independent compile-time page objects: static-abstract-interface-based generic creation, `Required<T>`/`Optional<T>` typed locators, no reflection.
-- **ShopDemo.Tests.E2E.Pom.V4** — V2 plus typed control wrappers (`Button`, `TextField`, `Select`, ...) that encapsulate MudBlazor interaction behaviour; attribute-bound properties use `required init` and locator optionality is expressed with `Optional = true`; see the [test-creation guide](ShopDemo.Tests.E2E.Pom.V4/docs/test-creation-guide.md); work in progress.
-- **ShopDemo.Tests.E2E.Otel** — OpenTelemetry PoC: traces V4 user interactions and page-object binds as spans, exported to the console and/or an OTLP collector; see [UI interaction tracing](#ui-interaction-tracing-opentelemetry-poc) above.
-- **ShopDemo.Tests.E2E.Screenplay** — actors, abilities, tasks, questions, and matching scenarios.
-
-The client loads the sample catalog from `ShopDemo.Client/wwwroot/data/products.json`; its product images use a local placeholder in `wwwroot/images`.
-
-## Included flows
-
-Browse/search/filter products, inspect product details, add/update/remove cart items, submit a simulated checkout, and view session-only orders. Shoppers can only view their own orders; store managers can update stock and inspect all orders created in the current browser session. Sign out and switch roles in the same browser tab to try a manager-restocks / shopper-orders / manager-reviews flow. The tote bag starts out of stock for this scenario.
-
-## PoC and security limitations
-
-This is a **client-only demonstration**, not an ecommerce or authentication system. Product configuration, manager permissions, and demo passwords are shipped to every browser and can be inspected or modified by users. Role checks illustrate UI and application-layer behavior only; they are not security controls. Login state, inventory changes, cart contents, and order history are held in memory and reset on page refresh. Do not put real credentials or sensitive configuration in these files, and never use these demo accounts for real authentication. Checkout only creates an in-memory order; it does not reserve or decrement inventory, charge payment, or persist customer data.
+All demo accounts use the password `1234`: shopper `demo@test.com` and store manager `admin@test.com`. The full list of accounts, coupons, test ids, and the API is documented in the app repository (`docs/application.md`).

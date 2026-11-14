@@ -1,0 +1,16 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="TestInfra.Baseline/TestInfra.Baseline.csproj" />
+  <Project Path="TestInfra.Generated/TestInfra.Generated.csproj" />
+  <Project Path="TestInfra.Otel/TestInfra.Otel.csproj" />
+  <Project Path="TestInfra.Pom.V1/TestInfra.Pom.V1.csproj" />
+  <Project Path="TestInfra.Pom.V2/TestInfra.Pom.V2.csproj" />
+  <Project Path="TestInfra.Pom.V3/TestInfra.Pom.V3.csproj" />
+  <Project Path="TestInfra.Pom.V4/TestInfra.Pom.V4.csproj" />
+  <Project Path="TestInfra.Screenplay/TestInfra.Screenplay.csproj" />
+  <Project Path="TestInfra.Shared/TestInfra.Shared.csproj" />
+</Solution>

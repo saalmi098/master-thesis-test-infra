@@ -1,0 +1,111 @@
+using Microsoft.Playwright;
+using Microsoft.Playwright.Xunit.v3;
+using System.Diagnostics;
+using TestInfra.Otel;
+using TestInfra.Pom.V4.Infrastructure.POM;
+using TestInfra.Shared;
+using Xunit;
+
+namespace TestInfra.Pom.V4;
+
+// TODO: remove V4 from the name of the class (use default ShopDemoPageTest and integrate the changes from here)
+public abstract class ShopDemoPageTestV4 : PageTest
+{
+    /// <summary>
+    /// Gets the per-test factory used to create and bind page objects.
+    /// </summary>
+    protected virtual PageObjectFactory PageObjectFactory => new();
+
+    private Activity? _testActivity;
+
+    /// <summary>
+    /// Creates and binds a page object for the current <see cref="PageTest.Page"/>.
+    /// </summary>
+    protected Task<T> CreatePageObject<T>(ILocator? baseLocator = null) where T : PageObject
+        => PageObjectFactory.Create<T>(Page, baseLocator);
+
+    public override BrowserNewContextOptions ContextOptions() => new()
+    {
+        BaseURL = E2ETestSettings.BaseUrl,
+        ViewportSize = new ViewportSize { Width = 1365, Height = 900 }
+    };
+
+    /// <summary>
+    /// Opens one root span per test, named after the test itself, so every <c>Control.TraceInteraction</c>
+    /// span performed during the test (clicks, fills, selections, ...) nests under it as a child span instead
+    /// of each becoming its own disconnected trace. Mirrors how a real frontend RUM integration groups
+    /// interactions under one page-view/session trace.
+    /// </summary>
+    public override async ValueTask InitializeAsync()
+    {
+        await TestDatabase.ResetAsync();
+        await base.InitializeAsync();
+
+        var testName = TestContext.Current?.Test?.TestDisplayName ?? GetType().Name;
+        _testActivity = UserInteractionTelemetry.ActivitySource.StartActivity(testName, ActivityKind.Internal);
+
+        // Split out of testName so a trace backend can filter by class or by method independently
+        // (e.g. Jaeger tag search "test.class=CatalogPageTests") instead of only by the full combined name.
+        _testActivity?.SetTag("test.class", TestContext.Current?.TestClass?.TestClassSimpleName ?? GetType().Name);
+        _testActivity?.SetTag("test.method", TestContext.Current?.TestMethod?.MethodName ?? testName);
+
+        UserInteractionTelemetry.SetTestRootActivity(Page, _testActivity);
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        UserInteractionTelemetry.SetTestRootActivity(Page, null);
+        RecordTestOutcome(_testActivity);
+        _testActivity?.Dispose();
+        await base.DisposeAsync();
+    }
+
+    /// <summary>
+    /// Tags the root span with the test's pass/fail outcome, so failed tests can be filtered for in the
+    /// trace backend instead of having to cross-reference the test runner's own output.
+    /// </summary>
+    private static void RecordTestOutcome(Activity? testActivity)
+    {
+        var result = TestContext.Current?.TestState?.Result;
+        if (testActivity is null || result is null)
+        {
+            return;
+        }
+
+        testActivity.SetTag("test.outcome", result.ToString());
+        testActivity.SetStatus(
+            result == TestResult.Passed ? ActivityStatusCode.Ok : ActivityStatusCode.Error);
+    }
+}
+
+public abstract class ShopDemoPageTestV4<TPageObject> : ShopDemoPageTestV4
+    where TPageObject : PageObject
+{
+    /// <summary>
+    /// Gets the initial page object after test initialization has navigated and bound it.
+    /// </summary>
+    protected TPageObject Model
+    {
+        get => field
+            ?? throw new InvalidOperationException("The initial page object is not available before test initialization completes.");
+        private set;
+    }
+
+    /// <summary>
+    /// Gets the application-relative route to open before binding <see cref="Model"/>.
+    /// </summary>
+    protected abstract string PageUrl { get; }
+
+    public override async ValueTask InitializeAsync()
+    {
+        await base.InitializeAsync();
+
+        await PageTracing.TraceInteractionAsync(Page, "Page", "Goto", async () =>
+        {
+            await Page.GotoAsync(PageUrl);
+        },
+        target: PageUrl);
+
+        Model = await CreatePageObject<TPageObject>();
+    }
+}
