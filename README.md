@@ -1,60 +1,46 @@
-# ShopDemo
+# TestInfra
 
-A full-featured demonstration webshop that serves as the **system under test** for comparing end-to-end test structures (Baseline, Page Objects V1-V4, Screenplay) and for assessing LLM-generated Playwright tests. It is built with .NET SDK 10, an ASP.NET Core minimal API, EF Core (SQLite or PostgreSQL), and a Blazor WebAssembly + MudBlazor 8.14.0 client. Every important UI element carries a stable `data-testid`; see [`docs/application.md`](docs/application.md) for the feature list, test-id catalog, and API reference.
+Playwright (.NET) end-to-end test projects that compare different ways of structuring E2E tests (Baseline, Page Objects V1-V4, Screenplay). All suites test the same webshop, **ShopDemo**, and implement the same user journeys, so the trade-offs of each structure become visible. The webshop itself lives in the separate repository `master-thesis-demo-app`; this repository contains only the test infrastructure.
 
-## Run it
+See [`docs/e2e-test-structure-poc.md`](docs/e2e-test-structure-poc.md) for the comparison and [`docs/slidev_presentation_E2E_Testing_Structure_with_Page_Object_Models.md`](docs/slidev_presentation_E2E_Testing_Structure_with_Page_Object_Models.md) for the presentation.
 
-### Locally (SQLite, no extra tooling)
+## Prerequisites
 
-```powershell
-dotnet restore ShopDemo.sln --source https://api.nuget.org/v3/index.json
-dotnet run --project ShopDemo.Server --no-restore
-```
+- .NET SDK 10
+- A running ShopDemo instance. Start it from the `master-thesis-demo-app` repository (`dotnet run --project ShopDemo.Server`, or `docker compose up --build`).
+- Playwright browsers: build the solution once, then run `pwsh TestInfra.Baseline/bin/Debug/net10.0/playwright.ps1 install chromium`.
 
-The server hosts the API and the Blazor client; open the URL printed on start-up (`https://localhost:53246` / `http://localhost:53247` with the launch profile). The SQLite file is created at `ShopDemo.Server/App_Data/shopdemo.db` and filled with demo data on first start. Delete the file, or call `POST /api/test/reset`, to start over.
-
-### With Docker Compose (PostgreSQL + API)
+## Run the tests
 
 ```powershell
-docker compose up --build        # http://localhost:5178
-docker compose down --volumes    # stop and delete the database
+dotnet restore TestInfra.slnx --source https://api.nuget.org/v3/index.json
+dotnet build TestInfra.slnx --no-restore
+dotnet test TestInfra.Baseline
 ```
 
-`docker-compose.yml` starts `db` (PostgreSQL 17, port 5432, user/password/database `shopdemo`) and `app` (the published server image, port 5178; override with `SHOPDEMO_PORT`). The database schema is created and seeded by the app on start-up; the app waits for the database health check. To run the browser suites against the stack: `pwsh ./scripts/test-e2e.ps1 -Docker`.
-
-### Configuration
-
-| Setting | Default | Meaning |
-| --- | --- | --- |
-| `Database__Provider` | `Sqlite` | `Sqlite` or `Postgres` |
-| `ConnectionStrings__ShopDb` | `Data Source=App_Data/shopdemo.db` | Connection string for the provider |
-| `Testing__EnableResetEndpoint` | `true` | Enables `POST /api/test/reset` (restores the seed data); disable for anything that is not a test target |
-
-Unit and service tests (domain rules, EF-backed services on in-memory SQLite):
+Tests reach the app through `SHOPDEMO_BASE_URL` (default `https://localhost:53246/`, the app's launch-profile URL). For the docker compose stack use `http://localhost:5178`:
 
 ```powershell
-dotnet test ShopDemo.Tests --no-restore
+$env:SHOPDEMO_BASE_URL = "http://localhost:5178"
+dotnet test TestInfra.Pom.V4
 ```
 
-## Playwright E2E suites
+Each suite can be run on its own: `TestInfra.Baseline`, `TestInfra.Pom.V1`, `TestInfra.Pom.V2`, `TestInfra.Pom.V3`, `TestInfra.Pom.V4`, `TestInfra.Screenplay`. `TestInfra.Generated` is reserved for LLM-generated Playwright tests (none committed yet).
 
-The solution has six independent xUnit v3 projects using `Microsoft.Playwright.Xunit.v3` 1.63.0 and xUnit v3 3.2.2: **ShopDemo.Tests.E2E.Baseline** uses Playwright directly, **ShopDemo.Tests.E2E.Pom.V1** uses Page Objects, **ShopDemo.Tests.E2E.Pom.V2** is an attribute-bound Page Object PoC, **ShopDemo.Tests.E2E.Pom.V3** is a compile-time (reflection-free) Page Object PoC, **ShopDemo.Tests.E2E.Pom.V4** extends V2 with typed MudBlazor control wrappers (work in progress), and **ShopDemo.Tests.E2E.Screenplay** uses Screenplay. V4 bound properties use `required init` rather than null-forgiving initializers. Locators are required by default; `[Locator(..., Optional = true)]` skips the initial visibility wait and owning page's readiness requirement without making the bound locator or control property nullable. See the [V4 test-creation guide](ShopDemo.Tests.E2E.Pom.V4/docs/test-creation-guide.md) for examples. The original three suites implement the same four journeys (the application has since grown many more features, see `docs/application.md`); V2 and V3 cover those journeys plus a product-details tab journey. **ShopDemo.Tests.E2E.Shared** contains only the shared Playwright `PageTest` setup, base URL, and demo test data. UI controls used by E2E have stable `data-testid` values.
+## Projects
 
-The Baseline suite keeps navigation, selectors, and interactions directly in each test to provide a comparison for code length and duplication. The POM V1 suite uses `PomPageTestBase`, which inherits `ShopDemoPageTest` to reuse its browser context options and provides a lazy `Pages` property. The page-object graph is created on first access and belongs to that test's `PageTest.Page`; no page-bound objects are shared across tests.
+The solution has independent xUnit v3 projects using `Microsoft.Playwright.Xunit.v3` 1.63.0 and xUnit v3 3.2.2:
 
-A separate V2 project deliberately does not reference V1. Its reflective factory injects `IPage` and an optional locator scope, while its binder resolves `[DataTestId]` and `[Locator]` attributes and waits for required locators before returning objects. It supports nested component scopes and defers tab-object creation until the parent clicks the tab. The Product Details page uses regular MudBlazor Overview and Inventory tabs.
+- **TestInfra.Shared** - common Playwright `PageTest` setup, base URL, demo data, and `TestDatabase.ResetAsync()`.
+- **TestInfra.Baseline** - direct Playwright tests without POM or Screenplay abstractions.
+- **TestInfra.Pom.V1** - hand-written page objects and POM scenarios.
+- **TestInfra.Pom.V2** - independent attribute-bound page objects, reflective factory, locator binder, and tab scenarios. See [`TestInfra.Pom.V2/docs`](TestInfra.Pom.V2/docs).
+- **TestInfra.Pom.V3** - independent compile-time page objects: static-abstract-interface-based generic creation, `Required<T>`/`Optional<T>` typed locators, no reflection. See [`TestInfra.Pom.V3/docs/architecture.md`](TestInfra.Pom.V3/docs/architecture.md).
+- **TestInfra.Pom.V4** - V2 plus typed control wrappers (`Button`, `TextField`, `Select`, ...) that encapsulate MudBlazor interaction behaviour; see the [test-creation guide](TestInfra.Pom.V4/docs/test-creation-guide.md); work in progress.
+- **TestInfra.Screenplay** - actors, abilities, tasks, questions, and matching scenarios.
+- **TestInfra.Generated** - reserved for LLM-generated Playwright tests; currently contains no tests.
 
-A lazy `GetPage<T>()` alternative is documented in [`docs/pom-page-object-factory.md`](docs/pom-page-object-factory.md); it is a proposal, not the current POM implementation.
-
-A separate V3 project also does not reference V1 or V2. It covers the same five journeys as V2 with no reflection: a static-abstract interface member (`IPageComponent<T>`) lets `PageComponent.Create<T>` construct and wait for any page object at compile time, and required/optional UI is a property type (`Required<ILocator>`/`Optional<ILocator>`) assigned once in the constructor rather than an attribute resolved by a binder. See [`ShopDemo.Tests.E2E.Pom.V3/docs/architecture.md`](ShopDemo.Tests.E2E.Pom.V3/docs/architecture.md) for the approach and its strengths/drawbacks versus V2.
-
-Run all browser suites end-to-end from PowerShell. The script restores from public NuGet, builds the solution, installs Chromium, starts the server on a temporary SQLite database (or the docker compose stack with `-Docker`), waits for `/api/health`, runs the unit tests and all browser suites, and stops everything:
-
-```powershell
-pwsh .\scripts\test-e2e.ps1
-```
-
-To run a suite against an already-running app, set `SHOPDEMO_BASE_URL` (default `http://127.0.0.1:5178`) and run `dotnet test ShopDemo.Tests.E2E.Baseline`, `dotnet test ShopDemo.Tests.E2E.Pom.V1`, `dotnet test ShopDemo.Tests.E2E.Pom.V2`, `dotnet test ShopDemo.Tests.E2E.Pom.V3`, `dotnet test ShopDemo.Tests.E2E.Pom.V4`, or `dotnet test ShopDemo.Tests.E2E.Screenplay`. Each Playwright test uses a fresh browser context and starts from freshly seeded data.
+The Baseline suite keeps navigation, selectors, and interactions directly in each test to provide a comparison for code length and duplication. The POM V1 suite uses `PomPageTestBase`, which inherits `ShopDemoPageTest` to reuse its browser context options and provides a lazy `Pages` property; the page-object graph belongs to that test's `PageTest.Page` and is never shared across tests. V2, V3, and V4 deliberately do not reference V1 (V4 extends the V2 design). A lazy `GetPage<T>()` alternative is documented in [`docs/pom-page-object-factory.md`](docs/pom-page-object-factory.md); it is a proposal, not the current POM implementation.
 
 ### Reuse in the test patterns
 
@@ -62,38 +48,10 @@ To run a suite against an already-running app, set `SHOPDEMO_BASE_URL` (default 
 - **Screenplay:** For example `SignIn`, `AddProductToCart`, and `CompleteCheckout` are composed in multiple scenarios. The same `OrderIsVisible` question checks their outcomes.
 - **Baseline:** The same login, cart, and checkout interactions are repeated inline, showing what the abstractions remove.
 
-## Demo accounts
-
-All demo accounts use the password `1234` (accounts you register need 8+ characters).
-
-| Role | Email | Notes |
-| --- | --- | --- |
-| Shopper | `demo@test.com` | Has a saved address, one delivered order, one wishlist item |
-| Store manager | `admin@test.com` | Dashboard, inventory, products, coupons, order management |
-| Shopper | `jane@test.com` | Two seeded orders (delivered, shipped) - useful for "only my orders" checks |
-
-Demo coupons: `WELCOME10` (10 % off), `SAVE5` (5.00 off from 30.00), `FREESHIP` (free shipping), `OLD20` (expired), `ONCE` (already fully redeemed). Test card numbers: `4242 4242 4242 4242` is accepted, `4000 0000 0000 0002` is declined.
-
-## Architecture
-
-- **ShopDemo.Domain** - entities, enums, pricing/coupon/order-status rules, `ShopException`.
-- **ShopDemo.Contracts** - request/response DTOs shared by server and client.
-- **ShopDemo.Infrastructure** - EF Core `ShopDbContext` (SQLite or PostgreSQL), seeder, and the use-case services (account, catalog, wishlist, cart, orders, admin).
-- **ShopDemo.Server** - ASP.NET Core minimal API (cookie authentication, role policy), static hosting of the Blazor client, test-support endpoint.
-- **ShopDemo.Client** - Blazor WebAssembly UI with MudBlazor; talks to the API through the typed `ShopApi`.
-- **ShopDemo.Tests** - unit tests for pricing/order rules and service tests against in-memory SQLite.
-- **ShopDemo.Tests.E2E.Shared** - common Playwright test setup, demo data, and `TestDatabase.ResetAsync()`.
-- **ShopDemo.Tests.E2E.Baseline** - direct Playwright tests without POM or Screenplay abstractions.
-- **ShopDemo.Tests.E2E.Pom.V1** - page objects and POM scenarios.
-- **ShopDemo.Tests.E2E.Pom.V2** - independent attribute-bound page objects, reflective factory, locator binder, and tab scenarios.
-- **ShopDemo.Tests.E2E.Pom.V3** - independent compile-time page objects: static-abstract-interface-based generic creation, `Required<T>`/`Optional<T>` typed locators, no reflection.
-- **ShopDemo.Tests.E2E.Pom.V4** - V2 plus typed control wrappers (`Button`, `TextField`, `Select`, ...) that encapsulate MudBlazor interaction behaviour; see the [test-creation guide](ShopDemo.Tests.E2E.Pom.V4/docs/test-creation-guide.md); work in progress.
-- **ShopDemo.Tests.E2E.Screenplay** - actors, abilities, tasks, questions, and matching scenarios.
-
 ## Test isolation
 
-State lives in the database, so the browser suites call `POST /api/test/reset` before every test (`ShopDemoPageTest` / `ShopDemoPageTestV4`) and run without parallelization. Set `SHOPDEMO_RESET_DB=false` to keep data between tests. Lists are filled from the API after navigation; assert with retrying expectations (or `LocatorExtensions.IsEventuallyVisibleAsync`) instead of reading a count immediately after a click.
+State lives in the app's database, so the suites call `POST /api/test/reset` before every test (`ShopDemoPageTest` / `ShopDemoPageTestV4`) and run without parallelization; the app must run with `Testing__EnableResetEndpoint=true` (the default). Set `SHOPDEMO_RESET_DB=false` to keep data between tests. Each Playwright test uses a fresh browser context. Lists are filled from the API after navigation; assert with retrying expectations (or `LocatorExtensions.IsEventuallyVisibleAsync`) instead of reading a count immediately after a click.
 
-## Security and scope notes
+## Demo accounts used by the tests
 
-This is a **demonstration application**. Passwords are hashed (ASP.NET Core Identity password hasher) and the session is an HttpOnly, SameSite=Lax cookie, but there is no email verification, rate limiting, CSRF token, or real payment provider; card handling is simulated and only the last four digits are stored. The seeded accounts use a trivial password, and `POST /api/test/reset` wipes all data - never expose either outside a test environment.
+All demo accounts use the password `1234`: shopper `demo@test.com` and store manager `admin@test.com`. The full list of accounts, coupons, test ids, and the API is documented in the app repository (`docs/application.md`).

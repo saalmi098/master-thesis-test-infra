@@ -13,7 +13,7 @@ The repository contains independent xUnit/Playwright E2E projects for the same S
 - **POM V3** — an alternative, compile-time approach; see [Appendix: POM V3](#appendix-pom-v3--compile-time-alternative).
 - **Screenplay** — tests describe actors, tasks, and questions instead of pages.
 
-All suites use shared browser setup and demo data from `ShopDemo.Tests.E2E.Shared`. The key business journey is the same: a manager restocks a product, a shopper orders it, and the manager finds the order.
+All suites use shared browser setup and demo data from `TestInfra.Shared`. The key business journey is the same: a manager restocks a product, a shopper orders it, and the manager finds the order.
 
 ```text
 Manager signs in ──> Restocks product ──> Signs out
@@ -198,14 +198,14 @@ V2: attributes + runtime reflection + structural locator binding
 V3: typed properties + compile-time construction + convention-based scope
 ```
 
-V3 is best read as an alternative design experiment, not as a direct continuation of V2. Its dedicated notes are in [`ShopDemo.Tests.E2E.Pom.V3/docs/architecture.md`](../ShopDemo.Tests.E2E.Pom.V3/docs/architecture.md).
+V3 is best read as an alternative design experiment, not as a direct continuation of V2. Its dedicated notes are in [`TestInfra.Pom.V3/docs/architecture.md`](../TestInfra.Pom.V3/docs/architecture.md).
 
 ## Source map
 
-- [Baseline journey](../ShopDemo.Tests.E2E.Baseline/ManagerRestocksShopperOrdersTests.cs)
-- [V1 journey and page objects](../ShopDemo.Tests.E2E.Pom.V1/ManagerRestocksShopperOrdersTests.cs)
-- [V2 binder and page objects](../ShopDemo.Tests.E2E.Pom.V2/Infrastructure/POM/PageObjectBinder.cs)
-- [V4 typed controls](../ShopDemo.Tests.E2E.Pom.V4/Infrastructure/Controls)
-- [V4 test-creation guide](../ShopDemo.Tests.E2E.Pom.V4/docs/test-creation-guide.md)
-- [Screenplay journey](../ShopDemo.Tests.E2E.Screenplay/ManagerRestocksShopperOrdersTests.cs)
+- [Baseline journey](../TestInfra.Baseline/ManagerRestocksShopperOrdersTests.cs)
+- [V1 journey and page objects](../TestInfra.Pom.V1/ManagerRestocksShopperOrdersTests.cs)
+- [V2 binder and page objects](../TestInfra.Pom.V2/Infrastructure/POM/PageObjectBinder.cs)
+- [V4 typed controls](../TestInfra.Pom.V4/Infrastructure/Controls)
+- [V4 test-creation guide](../TestInfra.Pom.V4/docs/test-creation-guide.md)
+- [Screenplay journey](../TestInfra.Screenplay/ManagerRestocksShopperOrdersTests.cs)
 - [Repository overview and run instructions](../README.md)
