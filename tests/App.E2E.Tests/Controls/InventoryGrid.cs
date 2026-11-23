@@ -1,5 +1,5 @@
 using Microsoft.Playwright;
-using TestInfrastructure.Controls;
+using TestInfrastructure.Controls.Base;
 
 namespace App.E2E.Tests.Controls;
 
