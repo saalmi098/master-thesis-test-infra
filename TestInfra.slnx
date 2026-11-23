@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="App.E2E.Generated.Tests/App.E2E.Generated.Tests.csproj" />
+  <Project Path="App.E2E.Tests/App.E2E.Tests.csproj" />
+  <Project Path="TestInfra.Controls/TestInfra.Controls.csproj" />
+  <Project Path="TestInfra.Pom/TestInfra.Pom.csproj" />
+</Solution>

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="*" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TestInfra.Pom\TestInfra.Pom.csproj" />
+    <ProjectReference Include="..\TestInfra.Controls\TestInfra.Controls.csproj" />
+  </ItemGroup>
+</Project>
