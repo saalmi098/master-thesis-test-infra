@@ -15,7 +15,7 @@ public class OrdersLinkTests : PlaywrightTestBase
         await page.GotoAsync(BaseUrl);
         await page.GetByTestId("catalog-result-count").WaitForAsync();
 
-        var catalog = await PageObject.CreateAsync<CatalogPage>(page);
+        var catalog = await PageObjectFactory.CreateAsync<CatalogPage>(page);
 
         Assert.Null(catalog.Orders);
     }
@@ -34,7 +34,7 @@ public class OrdersLinkTests : PlaywrightTestBase
         await page.GotoAsync(BaseUrl);
         await page.GetByTestId("catalog-result-count").WaitForAsync();
 
-        var catalog = await PageObject.CreateAsync<CatalogPage>(page);
+        var catalog = await PageObjectFactory.CreateAsync<CatalogPage>(page);
 
         Assert.NotNull(catalog.Orders);
         Assert.Equal("ORDERS", (await catalog.Orders.TextAsync()).ToUpperInvariant());

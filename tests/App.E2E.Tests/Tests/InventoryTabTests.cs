@@ -13,7 +13,7 @@ public class InventoryTabTests : PlaywrightTestBase
         var page = Session.Page;
         await page.GotoAsync("http://localhost:5178/products/field-notebook");
 
-        var details = await PageObject.CreateAsync<ProductDetailsPage>(page);
+        var details = await PageObjectFactory.CreateAsync<ProductDetailsPage>(page);
         await Assertions.Expect(details.Name.Locator).ToHaveTextAsync("Field Notes Notebook");
 
         var inventory = await details.OpenInventoryTabAsync();

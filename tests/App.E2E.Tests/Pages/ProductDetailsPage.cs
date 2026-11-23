@@ -24,7 +24,7 @@ public sealed class ProductDetailsPage(IPage page) : PageObject(page)
     public async Task<InventoryTab> OpenInventoryTabAsync()
     {
         await InventoryTab.SelectAsync();
-        return await CreateAsync<InventoryTab>(Root.GetByTestId("product-inventory-panel"));
+        return await PageObjectFactory.CreateAsync<InventoryTab>(Root.GetByTestId("product-inventory-panel"));
     }
 }
 

@@ -5,8 +5,6 @@ using TestInfrastructure.PageObjects;
 
 namespace App.E2E.Tests.Pages;
 
-// Required members are populated via reflection in PageObject.InitializeAsync.
-// Create instances with PageObject.CreateAsync<T>(page), never with `new`.
 public sealed class CatalogPage(IPage page) : PageObject(page)
 {
     [TestId("nav-cart-desktop")]
