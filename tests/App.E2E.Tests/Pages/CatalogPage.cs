@@ -12,6 +12,10 @@ public sealed class CatalogPage(IPage page) : PageObject(page)
     [TestId("nav-cart-desktop")]
     public required Link Cart { get; init; }
 
+    // Only visible when logged in.
+    [TestId("nav-orders-desktop", Optional = true)]
+    public Link? Orders { get; init; }
+
     [TestId("catalog-page")]
     public required CatalogContent Content { get; init; }
 }
