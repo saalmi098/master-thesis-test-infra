@@ -1,4 +1,5 @@
 using Microsoft.Playwright;
+using TestInfra.Extensions;
 
 namespace TestInfra.Controls.Base;
 
@@ -17,4 +18,10 @@ public abstract class Control(ILocator locator)
     /// Returns the element's rendered text (innerText).
     /// </summary>
     public Task<string> TextAsync() => Locator.InnerTextAsync();
+
+    /// <summary>
+    /// Starts an assertion chain on the wrapped element.
+    /// Usage: <c>control.Expect().ToHave...(...)</c>.
+    /// </summary>
+    public ILocatorAssertions Expect() => Locator.Expect();
 }

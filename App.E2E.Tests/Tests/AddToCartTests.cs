@@ -19,10 +19,10 @@ public class AddToCartTests : PlaywrightTestBase
         var catalog = await PageObjectFactory.CreateAsync<CatalogPage>(page);
 
         await catalog.Content.Search.FillAsync("notebook");
-        await Assertions.Expect(catalog.Content.ResultCount.Locator).ToHaveTextAsync("1 product(s) found");
+        await catalog.Content.ResultCount.Expect().ToHaveTextAsync("1 product(s) found");
 
         await catalog.Content.FieldNotebook.AddToCart.ClickAsync();
 
-        await Assertions.Expect(catalog.Cart.Locator).ToHaveTextAsync(new Regex(@"Cart \(1\)"));
+        await catalog.Cart.Expect().ToHaveTextAsync(new Regex(@"Cart \(1\)"));
     }
 }
