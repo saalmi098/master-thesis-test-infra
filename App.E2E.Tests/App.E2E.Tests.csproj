@@ -14,4 +14,7 @@
     <ProjectReference Include="..\TestInfra.Pom\TestInfra.Pom.csproj" />
     <ProjectReference Include="..\TestInfra.Controls\TestInfra.Controls.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

@@ -11,7 +11,7 @@ public class InventoryTabTests : TestBase
     public async Task Inventory_tab_shows_grid_after_it_loaded()
     {
         var page = Page;
-        await page.GotoAsync("http://localhost:5178/products/field-notebook");
+        await page.GotoAsync("/products/field-notebook");
 
         var details = await PageObjectFactory.CreateAsync<ProductDetailsPage>(page);
         await details.Name.Expect().ToHaveTextAsync("Field Notes Notebook");

@@ -12,7 +12,7 @@ public class AddToCartTests : TestBase
     public async Task Searching_and_adding_a_product_updates_the_cart_count()
     {
         var page = Page;
-        await page.GotoAsync("http://localhost:5178/");
+        await page.GotoAsync("/");
 
         // Product cards load asynchronously; wait for them before creating the page object.
         await page.GetByTestId("catalog-result-count").WaitForAsync();

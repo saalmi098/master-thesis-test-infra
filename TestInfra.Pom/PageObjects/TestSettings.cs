@@ -10,10 +10,30 @@ public static class TestSettings
     private const string BaseUrlKey = "BaseUrl";
     private const string HeadedKey = "Headed";
 
-    private static readonly IConfiguration Configuration = new ConfigurationBuilder()
-        .SetBasePath(AppContext.BaseDirectory)
-        .AddJsonFile("appsettings.json", optional: false)
-        .Build();
+    private const string FileName = "appsettings.json";
+
+    private static readonly IConfiguration Configuration = LoadConfiguration();
+
+    /// <summary>
+    /// Builds the configuration from <c>appsettings.json</c> in the output directory.
+    /// </summary>
+    /// <exception cref="FileNotFoundException">Thrown if the test project does not provide <c>appsettings.json</c>.</exception>
+    private static IConfiguration LoadConfiguration()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, FileName);
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException(
+                $"'{FileName}' not found at '{path}'. Each test project must provide its own {FileName} " +
+                $"(with '{BaseUrlKey}' and '{HeadedKey}') and copy it to the output directory",
+                path);
+        }
+
+        return new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile(FileName, optional: false)
+            .Build();
+    }
 
     /// <summary>
     /// Base URL of the application under test (key <c>BaseUrl</c>).
