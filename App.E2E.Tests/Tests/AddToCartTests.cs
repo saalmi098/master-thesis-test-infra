@@ -6,12 +6,12 @@ using Xunit;
 
 namespace App.E2E.Tests.Tests;
 
-public class AddToCartTests : PlaywrightTestBase
+public class AddToCartTests : TestBase
 {
     [Fact]
     public async Task Searching_and_adding_a_product_updates_the_cart_count()
     {
-        var page = Session.Page;
+        var page = Page;
         await page.GotoAsync("http://localhost:5178/");
 
         // Product cards load asynchronously; wait for them before creating the page object.

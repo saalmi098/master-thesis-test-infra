@@ -5,12 +5,12 @@ using Xunit;
 
 namespace App.E2E.Tests.Tests;
 
-public class InventoryTabTests : PlaywrightTestBase
+public class InventoryTabTests : TestBase
 {
     [Fact]
     public async Task Inventory_tab_shows_grid_after_it_loaded()
     {
-        var page = Session.Page;
+        var page = Page;
         await page.GotoAsync("http://localhost:5178/products/field-notebook");
 
         var details = await PageObjectFactory.CreateAsync<ProductDetailsPage>(page);

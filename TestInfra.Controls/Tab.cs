@@ -19,6 +19,6 @@ public sealed class Tab(ILocator locator) : Control(locator)
     /// <summary>
     /// Returns true if the tab is selected.
     /// </summary>
-    public async Task<bool> IsSelectedAsync() =>
+    public async Task<bool> IsSelectedAsync() => // TODO: this should use HasAttributeAsync instead of GetAttributeAsync, but that method is not yet implemented in Playwright.
         await TabElement.GetAttributeAsync("aria-selected") == "true";
 }
