@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Playwright;
+using TestInfra.Core;
 using TestInfra.Pom.Attributes;
 
 namespace TestInfra.Pom.PageObjects;

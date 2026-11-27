@@ -1,5 +1,5 @@
 using Microsoft.Playwright;
-using TestInfra.Extensions;
+using TestInfra.Core;
 
 namespace TestInfra.Controls.Base;
 

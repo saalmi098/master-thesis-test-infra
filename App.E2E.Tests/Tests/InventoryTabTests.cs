@@ -1,5 +1,5 @@
 using App.E2E.Tests.Pages;
-using TestInfra.Extensions;
+using TestInfra.Core;
 using TestInfra.Pom.PageObjects;
 using Xunit;
 

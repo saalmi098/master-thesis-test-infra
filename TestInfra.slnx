@@ -2,6 +2,6 @@
   <Project Path="App.E2E.Generated.Tests/App.E2E.Generated.Tests.csproj" />
   <Project Path="App.E2E.Tests/App.E2E.Tests.csproj" />
   <Project Path="TestInfra.Controls/TestInfra.Controls.csproj" />
-  <Project Path="TestInfra.Extensions/TestInfra.Extensions.csproj" />
+  <Project Path="TestInfra.Core/TestInfra.Core.csproj" />
   <Project Path="TestInfra.Pom/TestInfra.Pom.csproj" />
 </Solution>

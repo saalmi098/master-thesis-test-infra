@@ -1,6 +1,6 @@
 using Microsoft.Playwright;
 
-namespace TestInfra.Extensions;
+namespace TestInfra.Core;
 
 /// <summary>
 /// Extension methods for raw Playwright locators.

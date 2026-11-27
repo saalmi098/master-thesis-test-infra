@@ -1,6 +1,6 @@
 using Microsoft.Playwright;
 
-namespace TestInfra.Pom.PageObjects;
+namespace TestInfra.Core;
 
 /// <summary>
 /// Owns Playwright, browser, browser context and page for one test.

@@ -1,7 +1,7 @@
 using Microsoft.Playwright;
 using Xunit;
 
-namespace TestInfra.Pom.PageObjects;
+namespace TestInfra.Core;
 
 /// <summary>
 /// Base class for generated tests. xUnit creates one instance per test, so every test gets its own

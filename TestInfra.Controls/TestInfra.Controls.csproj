@@ -9,6 +9,6 @@
     <PackageReference Include="Microsoft.Playwright" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TestInfra.Extensions\TestInfra.Extensions.csproj" />
+    <ProjectReference Include="..\TestInfra.Core\TestInfra.Core.csproj" />
   </ItemGroup>
 </Project>

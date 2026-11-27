@@ -1,4 +1,4 @@
-namespace TestInfra.Pom.PageObjects;
+namespace TestInfra.Core;
 
 /// <summary>
 /// Timestamped debug output for page-object creation. The sink is per async flow (per test),
@@ -19,7 +19,7 @@ public static class PageObjectLog
     /// </summary>
     /// <param name="depth">Nesting level; two spaces of indentation per level.</param>
     /// <param name="message">Text to log.</param>
-    internal static void Write(int depth, string message)
+    public static void Write(int depth, string message)
     {
         var line = $"[{DateTime.Now:HH:mm:ss.fff}] {new string(' ', depth * 2)}{message}";
         (Sink.Value ?? Console.WriteLine)(line);

@@ -1,6 +1,6 @@
 using App.E2E.Tests.Pages;
-using Microsoft.Playwright;
 using System.Text.RegularExpressions;
+using TestInfra.Core;
 using TestInfra.Pom.PageObjects;
 using Xunit;
 

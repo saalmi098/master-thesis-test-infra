@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 
-namespace TestInfra.Pom.PageObjects;
+namespace TestInfra.Core;
 
 /// <summary>
 /// Test configuration read from <c>appsettings.json</c> next to the test assembly.
